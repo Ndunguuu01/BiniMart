@@ -1,6 +1,5 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
-import 'cart_screen.dart';
 import 'product_details_page.dart';
 import 'account_page.dart';
 
@@ -28,9 +27,9 @@ class MyApp extends StatelessWidget {
 // Cart Item Model
 class CartItem {
   final Map<String, dynamic> product; // Holds the product details
-  int quantity; // Holds the quantity of the product
+  final int quantity; // Holds the quantity of the product
 
-  CartItem({required this.product, this.quantity = 1});
+  CartItem({required this.product, required this.quantity});
 }
 
 class MyHomePage extends StatefulWidget {
@@ -252,8 +251,7 @@ class _MyHomePageState extends State<MyHomePage> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => CartScreen(cart: cart,
-                  onProductRemoved: updateCart,
+                MaterialPageRoute(builder: (context) => CartPage(cartItems: cart,
                 ),
                 ),
               );
@@ -409,7 +407,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       padding: const EdgeInsets.symmetric(horizontal: 8.0),
                       child: Card(
                         elevation: 4,
-                        child : Container(
+                        child : SizedBox(
                           width: 168,
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -609,7 +607,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       padding: const EdgeInsets.symmetric(horizontal: 8.0),
                       child: Card(
                         elevation: 4,
-                        child : Container(
+                        child : SizedBox(
                           width: 168,
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -802,7 +800,10 @@ class _MyHomePageState extends State<MyHomePage> {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => CartScreen(cart: cart ,onProductRemoved: updateCart,)),
+                  MaterialPageRoute(
+                    builder: (context) => CartPage(cartItems: cart,
+                    onProductRemoved: updateCart,
+                  )),
                 );
               },
             ),
@@ -917,11 +918,29 @@ class VouchersPage extends StatelessWidget {
 }
 
 // Wishlist page
-class WishlistPage extends StatelessWidget {
-  final List<Map<String, dynamic>> wishlist;
-  final Function(Map<String, dynamic>) removeFromWishlist;
+class WishlistPage extends StatefulWidget {
+  const WishlistPage({
+    super.key,
+    required this.wishlist,
+    required this.removeFromWishlist,
+  });
 
-  const WishlistPage({Key? key, required this.wishlist, required this.removeFromWishlist}) : super(key: key);
+  final List<Map<String, dynamic>> wishlist;
+  final Function(String) removeFromWishlist; // Function to remove item from wishlist
+
+  @override
+  WishlistPageState createState() => WishlistPageState();
+}
+
+class WishlistPageState extends State<WishlistPage> {
+  late List<Map<String, dynamic>> wishlist;
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize wishlist with data passed to the widget
+    wishlist = widget.wishlist;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -934,13 +953,17 @@ class WishlistPage extends StatelessWidget {
               itemBuilder: (context, index) {
                 final product = wishlist[index];
                 return ListTile(
-                  leading: Image.asset(product['image'], width: 50, height: 50, fit: BoxFit.cover),
+                  leading: Image.asset(product['image'], width: 50, height: 50),
                   title: Text(product['name']),
                   subtitle: Text('\$${product['price']}'),
                   trailing: IconButton(
-                    icon: Icon(Icons.remove_circle_outline, color: Colors.red),
+                    icon: const Icon(Icons.remove_circle_outline, color: Colors.red),
                     onPressed: () {
-                      removeFromWishlist(product); // Call the remove function when pressed
+                      // Call the remove function passed from the parent widget
+                      widget.removeFromWishlist(product['id']);
+                      setState(() {
+                        wishlist.removeAt(index); // Update local state after removal
+                      });
                     },
                   ),
                 );

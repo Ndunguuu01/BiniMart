@@ -4,7 +4,7 @@ import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 class ProductDetailsPage extends StatefulWidget {
   final Map<String, dynamic> product;
 
-  const ProductDetailsPage({Key? key, required this.product}) : super(key: key);
+  const ProductDetailsPage({super.key, required this.product});
 
   @override
   State<ProductDetailsPage> createState() => _ProductDetailsPageState();
@@ -151,12 +151,12 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                         _isAddedToCart = true;
                         });
                        },
-                        child: const Text('Add to Cart'),
                         style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.lightBlue,
                        padding: const EdgeInsets.symmetric(vertical: 16.0),
                        textStyle: const TextStyle(fontSize: 18),
                     ),
+                        child: const Text('Add to Cart'),
                   ),
                 ],
               ),
