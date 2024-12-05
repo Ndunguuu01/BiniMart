@@ -786,10 +786,13 @@ class _MyHomePageState extends State<MyHomePage> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) => WishlistPage(
+                      builder: (context) {
+                        var wishlistPage = WishlistPage(
                         wishlist: wishlist,
                         removeFromWishlist: toggleWishlist,
-                      ),
+                      );
+                        return wishlistPage;
+                      },
                       ),
                 );
               },
