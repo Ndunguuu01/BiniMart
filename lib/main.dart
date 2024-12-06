@@ -208,6 +208,15 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  List<CartItem> convertToCartItems(List<Map<String, dynamic>> cartItems) {
+    return cartItems.map((item) {
+      return CartItem(
+        product: item, 
+        quantity: item['quantity'],
+      );
+    }).toList();
+  }
+
 
   void updateQuantity(String productName, int change) {
     setState(() {
@@ -228,6 +237,18 @@ class _MyHomePageState extends State<MyHomePage> {
         wishlist.removeWhere((item) => item['name'] == product['name']);
       }
     });
+  }
+
+  dynamic removeFromWishlist(String productName) {
+    int index = wishlist.indexWhere((item) => item['name'] == productName);
+
+    if (index != -1) {
+      wishlist.removeAt(index);
+      setState(() {});
+      return true;
+    } else {
+      return false;
+    }
   }
 
   @override
@@ -251,7 +272,7 @@ class _MyHomePageState extends State<MyHomePage> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => CartPage(cartItems: cart,
+                MaterialPageRoute(builder: (context) => CartPage(cartItems: convertToCartItems(cart),
                 ),
                 ),
               );
@@ -789,7 +810,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       builder: (context) {
                         var wishlistPage = WishlistPage(
                         wishlist: wishlist,
-                        removeFromWishlist: toggleWishlist,
+                        removeFromWishlist: removeFromWishlist,
                       );
                         return wishlistPage;
                       },
@@ -804,8 +825,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => CartPage(cartItems: cart,
-                    onProductRemoved: updateCart,
+                    builder: (context) => CartPage(cartItems: convertToCartItems(cart),
                   )),
                 );
               },
