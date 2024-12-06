@@ -59,20 +59,20 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
-     - images/profilepic.jpg
-     - images/banner1.jpg
-     - images/banner2.jpg
-     - images/banner3.jpg
-     - images/product1.jpg
-     - images/product2.jpg
-     - images/product3.jpg
-     - images/Blue Bubble Toilet Block Lavender 50g 4 Pieces.jpg
-     - images/Cadbury Fruit & Nut 80g.png
-     - images/Daawat Aromatic Rice 5Kg.jpg
-     - images/Harpic Power Plus Lavender 1L.jpg
-     - images/Krackles Potato Crisps Bar-B-Que 125g.jpg
-     - images/Mumias Sugar Packed 2 kg.jpg
-     - images/Tropical Heat Potato Crisps Salt & Vinegar 50g.jpg
+     - assets/images/profilepic.jpg
+     - assets/images/banner1.jpg
+     - assets/images/banner2.jpg
+     - assets/images/banner3.jpg
+     - assets/images/product1.jpg
+     - assets/images/product2.jpg
+     - assets/images/product3.jpg
+     - assets/images/Blue Bubble Toilet Block Lavender 50g 4 Pieces.jpg
+     - assets/images/Cadbury Fruit & Nut 80g.png
+     - assets/images/Daawat Aromatic Rice 5Kg.jpg
+     - assets/images/Harpic Power Plus Lavender 1L.jpg
+     - assets/images/Krackles Potato Crisps Bar-B-Que 125g.jpg
+     - assets/images/Mumias Sugar Packed 2 kg.jpg
+     - assets/images/Tropical Heat Potato Crisps Salt & Vinegar 50g.jpg
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
