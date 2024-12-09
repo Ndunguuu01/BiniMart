@@ -1,17 +1,17 @@
-import 'package:binimart_app/main.dart';
 import 'package:flutter/material.dart';
-import  'services/api_service.dart';
+import 'package:binimart_app/main.dart';
+import 'services/api_service.dart';
 import 'dart:developer';
 
 class CartPage extends StatefulWidget {
   final List<CartItem> cartItems;
   final Function(String) onProductRemoved;
-  
+
   const CartPage({
     super.key,
     required this.cartItems,
     required this.onProductRemoved,
-    });
+  });
 
   @override
   CartPageState createState() => CartPageState();
@@ -47,36 +47,67 @@ class CartPageState extends State<CartPage> {
 
     return Scaffold(
       appBar: AppBar(title: const Text("Cart")),
-      body: cartItems.isEmpty
-          ? const Center(child: Text("Your Cart is Empty"))
-          : ListView.builder(
-              itemCount: cartItems.length,
-              itemBuilder: (context, index) {
-                final item = cartItems[index];
-                final price = item['price'] * item['quantity'];
-
-                return ListTile(
-                  leading: Image.asset(item['image'], width: 50, height: 50),
-                  title: Text(item['name']),
-                  subtitle: Text('Quantity: ${item['quantity']} - \$${price.toStringAsFixed(2)}'),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.remove_circle_outline),
-                    onPressed: () {
-                      // Remove from cart
-                      _apiService.removeFromCart(item['id']);
-                      setState(() {
-                        cartItems.removeAt(index);
-                      });
-                    },
-                  ),
-                );
-              },
-            ),
-      bottomNavigationBar: BottomAppBar(
+      body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(8.0),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Cart items list
+              cartItems.isEmpty
+                  ? const Center(child: Text("Your Cart is Empty"))
+                  : ListView.builder(
+                      shrinkWrap: true, // Shrinks to only take up the space needed
+                      physics: NeverScrollableScrollPhysics(), // Disable scrolling for inner ListView
+                      itemCount: cartItems.length,
+                      itemBuilder: (context, index) {
+                        final product = cartItems[index]['product'] ?? {}; // Default empty map if null
+                        final image = product['image'] ?? 'assets/default_image.png'; // Fallback image
+                        final name = product['name'] ?? 'Unnamed Product'; // Fallback name
+                        final price = product['price'] * product['quantity'];
+
+                        return ListTile(
+                          leading: Image.asset(image, width: 50, height: 50),
+                          title: Text(name),
+                          subtitle: Text('Quantity: ${product['quantity']} - \$${price.toStringAsFixed(2)}'),
+                          trailing: IconButton(
+                            icon: const Icon(Icons.remove_circle_outline),
+                            onPressed: () {
+                              // Remove from cart
+                              _apiService.removeFromCart(product['id']);
+                              setState(() {
+                                cartItems.removeAt(index);
+                              });
+                            },
+                          ),
+                        );
+                      },
+                    ),
+
+              // Total and VAT information
+              Padding(
+                padding: const EdgeInsets.only(top: 8.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Total: \$${total.toStringAsFixed(2)}'),
+                    Text('VAT (2%): \$${vat.toStringAsFixed(2)}'),
+                    Text(
+                      'Final Amount: \$${finalAmount.toStringAsFixed(2)}',
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Container(
+          color: Colors.white,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
               Text('Total: \$${total.toStringAsFixed(2)}'),
               Text('VAT (2%): \$${vat.toStringAsFixed(2)}'),

@@ -1,7 +1,14 @@
+import 'dart:convert';
+import 'dart:io';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'product_details_page.dart';
 import 'account_page.dart';
+import 'package:logger/logger.dart';
+import 'package:image_picker/image_picker.dart';
+
+final Logger logger = Logger();
 
 void main() {
   runApp(const MyApp());
@@ -44,56 +51,15 @@ class _MyHomePageState extends State<MyHomePage> {
   final List<String> categories = ['All', 'Beverages', 'Flour', 'Drinks', 'Fat & Oil', 'Snacks', 'Cereals', 'Toiletries'];
   String? selectedCategory = 'All';
 
-  final List<Map<String, dynamic>> products = [
-    {
-      'name': 'Cooking oil 5L',
-      'category': 'Fat & Oil',
-      'price': 49.99,
-      'image': 'assets/images/product1.jpg',
-      'rating': 4.5,
-      'isWishlisted': false,
-    },
-    {
-      'name': 'Pembe Maize flour 2KG',
-      'category': 'Flour',
-      'price': 79.99,
-      'image': 'assets/images/product2.jpg',
-      'rating': 4.0,
-      'isWishlisted': false,
-    },
-    {
-      'name': 'Latto Milk 500ML',
-      'category': 'Drinks',
-      'price': 29.99,
-      'image': 'assets/images/product3.jpg',
-      'rating': 3.5,
-      'isWishlisted': false,
-    },
-    {
-      'name': 'Blue Bubble Toilet Block Lavender 50g',
-      'category': 'Toiletries',
-      'price': 29.99,
-      'image': 'assets/images/Blue Bubble Toilet Block Lavender 50g 4 Pieces.jpg',
-      'rating': 2.5,
-      'isWishlisted': false,
-    },
-    {
-      'name': 'Cadbury Fruit & Nut 80g',
-      'category': 'Snacks',
-      'price': 29.99,
-      'image': 'assets/images/Cadbury Fruit & Nut 80g.png',
-      'rating': 3.5,
-      'isWishlisted': false,
-    },
-    {
-      'name': 'Daawat Aromatic Rice 5Kg',
-      'category': 'Cereals',
-      'price': 29.99,
-      'image': 'assets/images/Daawat Aromatic Rice 5Kg.jpg',
-      'rating': 3.5,
-      'isWishlisted': false,
-    },
-  ];
+  List<Map<String, dynamic>> products = [];
+  List<Map<String, dynamic>> wishlist = [];
+  List<Map<String, dynamic>> cart = [];
+  Map<String, int> quantities = {};
+  bool isLoading = true;
+
+  final ImagePicker _picker = ImagePicker();
+  String userName = 'Brian N';
+
 
   final List<Map<String, dynamic>> otherProducts = [
     {
@@ -122,32 +88,60 @@ class _MyHomePageState extends State<MyHomePage> {
     },
   ];
 
-  List<Map<String, dynamic>> wishlist = [];
-
-  Map<String, int> quantities = {};
-
-
   Map<String, int> productQuantities = {};
 
-  int quantity = 1;
-
   String searchQuery = '';
-
-  bool isLoading = true;
-
-  List<Map<String, dynamic>> cart = [];
 
   Set<String> addedToCartItems = {};
 
 
 
+  Future<void> pickProfileImage() async{
+    final XFile? pickedImage = await _picker.pickerImage(source: ImageSource.gallery);
+    if (pickedImage != null) {
+      setState(() {
+        profilePicturePath = pickedImage.path;
+      });
+    }
+  }
+
+  void updateUserName(String newUserName) {
+    setState(() {
+      userName = newUserName;
+    });
+  }
 
   @override
   void initState() {
     super.initState();
-    // Initialize quantities to 1 for each product
-    for (var product in products) {
-      quantities[product['name']] = 1;
+    fetchProducts();
+  }
+
+  Future<void> fetchProducts() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      final response = await http.get(Uri.parse('http://Localhost:5001/products'));
+      if(response.statusCode == 200){
+        final data = jsonDecode(response.body) as List;
+        products = data.map((product) => product as Map<String, dynamic>).toList();
+
+        for (var product in products) {
+          quantities[product['name']] = 1;
+        }
+        logger.i("Fetched${products.length}products successfully");
+      }else {
+        logger.w("Failed to fetch products. status code:${response.statusCode}");
+        throw Exception('Failed to load products');
+      }
+    } catch (e, stackTrace) {
+      logger.e("Error ffetching products: $e\nStackTrace: $stackTrace");
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 
@@ -218,16 +212,6 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
 
-  void updateQuantity(String productName, int change) {
-    setState(() {
-      final currentQuantity = quantities[productName] ?? 1;
-      final newQuantity = currentQuantity + change;
-      if (newQuantity > 0) {
-        quantities[productName] = newQuantity;
-      }
-    });
-  }
-
   void toggleWishlist(Map<String, dynamic> product) {
     setState(() {
       product['isWishlisted'] = !product['isWishlisted'];
@@ -258,12 +242,24 @@ class _MyHomePageState extends State<MyHomePage> {
         backgroundColor: Colors.lightBlue,
         title: Row(
           children: [
-            CircleAvatar(
-              backgroundImage: AssetImage('assets/images/profilepic.jpg'),
-              radius: 20,
+            GestureDetector(
+              onTap: pickProfileImage,
+              child: CircleAvatar(
+              backgroundImage: profilePicturePath != null // Check for image path
+                  ? FileImage(File(profilePicturePath)) // Display selected image
+                  : AssetImage('assets/images/profilepic.jpg'),  
+                radius: 20,
+              ),
             ),
             const SizedBox(width: 8),
-            const Text('Brian N'),
+            TextField(
+              controller: TextEditingController(text: userName),
+              decoration: const InputDecoration(
+                hintText: 'UserName',
+                border: InputBorder.none,
+              ),
+              onChanged: updateUserName,
+            )
           ],
         ),
         actions: [
@@ -769,11 +765,6 @@ class _MyHomePageState extends State<MyHomePage> {
                                         addedToCartItems.contains(product['name']) ? "Added to Cart" : "Add To Cart",
                                       ),
                                     )
-
-
-
-
-
                                   ],
                                 ),
                               ),
