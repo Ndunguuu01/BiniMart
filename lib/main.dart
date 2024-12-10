@@ -59,6 +59,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   final ImagePicker _picker = ImagePicker();
   String userName = 'Brian N';
+  String profilePicturePath = 'assets/images/profilepic.jpg';
 
 
   final List<Map<String, dynamic>> otherProducts = [
@@ -97,7 +98,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
 
   Future<void> pickProfileImage() async{
-    final XFile? pickedImage = await _picker.pickerImage(source: ImageSource.gallery);
+    final XFile? pickedImage = await _picker.pickImage(source: ImageSource.gallery);
     if (pickedImage != null) {
       setState(() {
         profilePicturePath = pickedImage.path;
@@ -245,9 +246,7 @@ class _MyHomePageState extends State<MyHomePage> {
             GestureDetector(
               onTap: pickProfileImage,
               child: CircleAvatar(
-              backgroundImage: profilePicturePath != null // Check for image path
-                  ? FileImage(File(profilePicturePath)) // Display selected image
-                  : AssetImage('assets/images/profilepic.jpg'),  
+              backgroundImage: FileImage(File(profilePicturePath)),  
                 radius: 20,
               ),
             ),
