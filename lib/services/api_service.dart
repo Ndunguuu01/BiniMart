@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  static const String baseUrl = "https://localhost:5001/api/products"; 
+  static const String baseUrl = "https://192.168.100.51:5001/api/products"; 
 
   // Fetch products from the API
   Future<List<Map<String, dynamic>>> getProducts() async {

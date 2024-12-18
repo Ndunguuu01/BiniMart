@@ -1,12 +1,15 @@
 import 'dart:convert';
+// ignore: unused_import
+import 'dart:io' if (dart.library.html) 'dart:html' as html;
 import 'dart:io';
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'product_details_page.dart';
 import 'account_page.dart';
 import 'package:logger/logger.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:http/http.dart' as http;
 
 final Logger logger = Logger();
 
@@ -26,7 +29,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home:MyHomePage(title: 'Flutter  Page'),
     );
   }
 }
@@ -51,11 +54,13 @@ class _MyHomePageState extends State<MyHomePage> {
   final List<String> categories = ['All', 'Beverages', 'Flour', 'Drinks', 'Fat & Oil', 'Snacks', 'Cereals', 'Toiletries'];
   String? selectedCategory = 'All';
 
-  List<Map<String, dynamic>> products = [];
   List<Map<String, dynamic>> wishlist = [];
   List<Map<String, dynamic>> cart = [];
   Map<String, int> quantities = {};
   bool isLoading = true;
+  List<dynamic> products = [];
+
+
 
   final ImagePicker _picker = ImagePicker();
   String userName = 'Brian N';
@@ -112,41 +117,32 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  @override
+
+ Future<void> fetchProducts() async {
+  try {
+    final response = await http.get(Uri.parse('http://localhost:5001/api/products'));
+    if (response.statusCode == 200) {
+      setState(() {
+        products = jsonDecode(response.body);
+      });
+    } else {
+      throw Exception('Failed to fetch products: ${response.statusCode}');
+    }
+  } catch (error) {
+    logger.e('Error fetching products: $error');
+    // Display an error message to the user
+  }
+}
+
+    @override
   void initState() {
     super.initState();
     fetchProducts();
   }
 
-  Future<void> fetchProducts() async {
-    setState(() {
-      isLoading = true;
-    });
 
-    try {
-      final response = await http.get(Uri.parse('http://Localhost:5001/products'));
-      if(response.statusCode == 200){
-        final data = jsonDecode(response.body) as List;
-        products = data.map((product) => product as Map<String, dynamic>).toList();
 
-        for (var product in products) {
-          quantities[product['name']] = 1;
-        }
-        logger.i("Fetched${products.length}products successfully");
-      }else {
-        logger.w("Failed to fetch products. status code:${response.statusCode}");
-        throw Exception('Failed to load products');
-      }
-    } catch (e, stackTrace) {
-      logger.e("Error ffetching products: $e\nStackTrace: $stackTrace");
-    } finally {
-      setState(() {
-        isLoading = false;
-      });
-    }
-  }
-
-  List<Map<String, dynamic>> get filteredProducts {
+  List get filteredProducts {
     return (selectedCategory == 'All')
         ? products
         : products.where((product) => product['category'] == selectedCategory).toList();
@@ -246,18 +242,28 @@ class _MyHomePageState extends State<MyHomePage> {
             GestureDetector(
               onTap: pickProfileImage,
               child: CircleAvatar(
-              backgroundImage: FileImage(File(profilePicturePath)),  
-                radius: 20,
+              backgroundImage: kIsWeb
+                 ? const AssetImage('assets/images/profilepic.jpg')as ImageProvider
+                 : (File(profilePicturePath).existsSync()
+                    ? FileImage(File(profilePicturePath))
+                    : const AssetImage('assets/images/profilepic.jpg')as ImageProvider),
+              radius: 20,
               ),
             ),
             const SizedBox(width: 8),
-            TextField(
-              controller: TextEditingController(text: userName),
-              decoration: const InputDecoration(
-                hintText: 'UserName',
-                border: InputBorder.none,
+            Text(
+              'Welcome',
+              style: const TextStyle(color: Colors.white),
+            ),
+            Expanded(
+              child: TextField(
+                controller: TextEditingController(text: userName),
+                decoration: const InputDecoration(
+                  hintText: 'UserName',
+                  border: InputBorder.none,
+                ),
+                onChanged: updateUserName,
               ),
-              onChanged: updateUserName,
             )
           ],
         ),
@@ -382,7 +388,7 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             const SizedBox(height: 14),
 
-            // Products section
+            //popular Products section
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
               child: Text(
@@ -431,15 +437,14 @@ class _MyHomePageState extends State<MyHomePage> {
                               Expanded(
                                 child: Stack(
                                   children: [
-                                    Hero(
-                                      tag: product['image'],
-                                      child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(8.0),
-                                      child: Image.asset(
-                                        product['image'],
-                                        fit: BoxFit.cover,
-                                        width: 168,
-                                        height: 180,
+                                    // ignore: sized_box_for_whitespace
+                                    Container(
+                                      height: 150,
+                                      child: const Center(
+                                      child: Icon(
+                                        Icons.image,
+                                        color: Colors.grey,
+                                        size: 50,
                                       ),
                                       ),
                                     ),
@@ -448,8 +453,8 @@ class _MyHomePageState extends State<MyHomePage> {
                                       right: 2,
                                       child: IconButton(
                                         icon: Icon(
-                                          product['isWishlisted'] ? Icons.favorite : Icons.favorite_border,
-                                          color: product['isWishlisted'] ? Colors.red : Colors.grey,
+                                          product['isWishlisted'] == true ? Icons.favorite : Icons.favorite_border,
+                                          color: product['isWishlisted'] == true  ? Colors.red : Colors.grey,
                                         ),
                                         onPressed: () => toggleWishlist(product),
                                       ),
@@ -582,7 +587,7 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             ),
 
-            // More Products section
+            // Other Products section
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
               child: Text(
@@ -601,7 +606,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 scrollDirection: Axis.horizontal,
                 itemCount: otherProducts.length,
                 itemBuilder: (context, index) {
-                  final product = filteredProducts[index];
+                  final product = otherProducts[index];
 
                   productQuantities[product['name']] ??= 1;
 
